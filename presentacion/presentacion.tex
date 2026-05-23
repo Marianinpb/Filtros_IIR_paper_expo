@@ -1,0 +1,164 @@
+% =============================================================================
+% presentacion.tex — Plantilla LaTeX para Exposición Académica
+% Harness SDD Antigravity — Módulo de Tipo de Proyecto: exposition
+%
+% INSTRUCCIONES PARA EL AGENTE:
+%   Reemplazar los siguientes placeholders con los datos provistos por el usuario:
+%     {{TITULO}}           — Título principal de la presentación
+%     {{SUBTITULO}}        — Subtítulo (puede dejarse vacío si no aplica)
+%     {{AUTOR}}            — Nombre completo del expositor
+%     {{INSTITUCION}}      — Institución académica del expositor
+%     {{FECHA}}            — Fecha de la presentación (texto libre o \today)
+%     {{CONTENIDO_SECCIONES}} — Secciones y frames generados a partir de la fuente
+%
+%   REGLA CRÍTICA: Los valores de los placeholders SIEMPRE deben ser
+%   proporcionados EXPLÍCITAMENTE por el usuario. NUNCA inferirlos del
+%   contenido de la fuente (paper, libro, repositorio).
+%
+%   IDIOMA: Por defecto esta plantilla usa español. Si el usuario confirmó
+%   explícitamente otro idioma, cambiar el paquete babel correspondiente.
+% =============================================================================
+
+\documentclass[10pt]{beamer}
+
+\usetheme[progressbar=frametitle]{metropolis}
+\usecolortheme{aggie}
+
+\usepackage{appendixnumberbeamer}
+\usepackage{booktabs}
+\usepackage[scale=2]{ccicons}
+\usepackage{pgfplots}
+\usepgfplotslibrary{dateplot}
+\usepackage{xspace}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}   % Cambiar solo si el usuario confirmó explícitamente otro idioma
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+\newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
+
+% -----------------------------------------------------------------------------
+% Metadatos de la presentación
+% Todos los valores provienen de datos proporcionados explícitamente por el usuario
+% -----------------------------------------------------------------------------
+\title{Optimal Design of Digital IIR Filters Using Robust Group Search Optimization}
+\titlegraphic{%
+  \includegraphics[height=1.5cm]{IICO-LOGO-AZUL.png}\hfill\includegraphics[height=1.5cm]{UASLP-LOGO-AZUL.png}%
+}
+
+\date{23 de mayo 2026}
+\author{Mariano Prado Berman}
+\institute{Instituto de Investigación en Comunicación Óptica (IICO)}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{Contenido}
+  \setbeamertemplate{section in toc}[sections numbered]
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% CONTENIDO DE LA PRESENTACIÓN
+% El agente reemplaza {{CONTENIDO_SECCIONES}} con los frames generados
+% a partir del análisis de la fuente (paper, tema+libro, o repositorio).
+%
+% Formato esperado de cada sección:
+%
+%   \section{Nombre de la Sección}
+%
+%   \begin{frame}{Título del Frame}
+%     \begin{itemize}
+%       \item Punto clave 1
+%       \item Punto clave 2
+%     \end{itemize}
+%   \end{frame}
+%
+% Para ecuaciones matemáticas, usar entornos equation o equation*.
+% Para bloques destacados, usar \begin{alertblock}{Título}...\end{alertblock}.
+% -----------------------------------------------------------------------------
+
+\section{Contexto y Motivación}
+
+\begin{frame}{El Problema del Diseño de Filtros IIR}
+  \begin{itemize}
+    \item Los métodos de transformación (e.g., bilineal) introducen distorsiones (warping) en altas frecuencias.
+    \item La \textbf{optimización numérica directa} de los coeficientes es preferida, pero propensa a óptimos locales.
+    \item Métodos bioinspirados como \textbf{GSO} (Group Search Optimization) dependen de un único ``productor'', limitando la exploración global.
+  \end{itemize}
+  \begin{alertblock}{Propuesta: R-GSO}
+    Integrar el \textbf{Método de Taguchi} en GSO para seleccionar un productor óptimo a partir de tres candidatos, garantizando robustez matemática y escape de óptimos locales.
+  \end{alertblock}
+\end{frame}
+
+\section{Formulación Matemática}
+
+\begin{frame}{Función de Transferencia y Costo}
+  Filtro IIR en cascada:
+  \begin{equation}
+    H(\omega, x) = \alpha \gamma \left( \prod_{i=1}^M \frac{1 + a_i e^{-j\omega}}{1 + b_i e^{-j\omega}} \right) \left( \prod_{k=1}^N \frac{1 + c_{1k} e^{-j\omega} + c_{2k} e^{-2j\omega}}{1 + d_{1k} e^{-j\omega} + d_{2k} e^{-2j\omega}} \right)
+  \end{equation}
+  
+  Minimización de función de costo $f(x)$ que unifica 4 criterios:
+  \begin{equation}
+    \min_x f(x) = \min_x \left[ v_1 E^1_M(x) + v_2 E^2_M(x) + v_3 \delta_1(x) + v_4 \delta_2(x) \right]
+  \end{equation}
+  Donde $E^1_M, E^2_M$ son errores de norma $L_1, L_2$, y $\delta_1, \delta_2$ son los ripples de banda de paso y rechazo.
+\end{frame}
+
+\begin{frame}{Restricciones de Estabilidad}
+  Para garantizar que los polos permanezcan dentro del círculo unitario (plano $Z$), se imponen las siguientes inecuaciones:
+  \begin{equation*}
+    1 + b_i \ge 0, \quad 1 - b_i \ge 0
+  \end{equation*}
+  \begin{equation*}
+    1 - d_{2k} \ge 0, \quad 1 + d_{1k} + d_{2k} \ge 0, \quad 1 - d_{1k} + d_{2k} \ge 0
+  \end{equation*}
+  Estas restricciones definen un espacio de búsqueda altamente acotado y complejo.
+\end{frame}
+
+\section{Algoritmo R-GSO (Integración de Taguchi)}
+
+\begin{frame}{Selección Robusta del Productor}
+  En cada iteración, se seleccionan 3 productores: el mejor ($X_{p1}$), el segundo mejor ($X_{p2}$) y uno aleatorio ($X_{p3}$).
+  \vspace{0.5cm}
+  
+  Se aplican \textbf{arreglos ortogonales de Taguchi} para cruzar sistemáticamente estos perfiles. El desempeño se evalúa mediante la relación Señal/Ruido (Robust Response Value):
+  \begin{equation}
+    E_{fj} = -10 \cdot \log \left( \frac{J_{i(avg)}^2}{J_{Mavg}^2} + \frac{J_{i(std)}^2}{J_{Mstd}^2} \right), \quad j=1, 2
+  \end{equation}
+  
+  Este criterio prioriza no solo un bajo costo promedio, sino una \textbf{baja desviación estándar}, asegurando estabilidad estructural.
+\end{frame}
+
+\section{Resultados y Conclusiones}
+
+\begin{frame}{Resultados Experimentales}
+  Se evaluaron filtros LP, HP, BP y BS, comparando R-GSO contra GSO estándar y HTGA.
+  \begin{itemize}
+    \item \textbf{Fitness Final:} R-GSO minimizó de forma superior la función de costo en todos los casos.
+    \item \textbf{Convergencia:} Escape eficiente de óptimos locales (especialmente notorio en el filtro Pasa-altas HP).
+    \item \textbf{Eficiencia:} Menor cantidad de evaluaciones de la función objetivo respecto a HTGA (72,500 vs 130,000 en LP/HP) gracias al uso estadístico de Taguchi.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Conclusiones}
+  \begin{itemize}
+    \item La integración formal de la estadística de Taguchi con metaheurísticas de enjambre resuelve la debilidad estructural del GSO clásico.
+    \item El algoritmo R-GSO demuestra un rigor matemático superior que se traduce en filtros IIR digitales más exactos y un costo computacional acotado.
+  \end{itemize}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+% Referencias bibliográficas
+% -----------------------------------------------------------------------------
+\setbeamertemplate{frametitle continuation}{}
+\begin{frame}[allowframebreaks]{Referencias}
+  \nocite{*}
+  \bibliography{presentacion}
+  \bibliographystyle{abbrv}
+\end{frame}
+
+\end{document}

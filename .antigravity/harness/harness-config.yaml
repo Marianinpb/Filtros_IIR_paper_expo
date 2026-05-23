@@ -1,0 +1,108 @@
+# harness-config.yaml
+# =============================================================================
+# Central configuration file for the SDD Harness.
+# The AI agent reads this file at startup to understand the project scope,
+# technology stack, and rules to enforce.
+#
+# INSTRUCTIONS: Fill in the fields below for each new project.
+# Keys marked [REQUIRED] must be completed before starting any SDD phase.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Project Definition [REQUIRED]
+# ---------------------------------------------------------------------------
+project:
+  name: "ExpoFiltrosIIR"
+  type: "exposition"
+  description: "Exposición sobre el paper Optimal Design of Digital IIR Filters Using Robust Group Search Optimization"
+
+# ---------------------------------------------------------------------------
+# Environment & Technology [REQUIRED]
+# ---------------------------------------------------------------------------
+environment:
+  tech_stack: ["latex"]
+  runtime_version: ""
+  package_manager: ""
+
+# ---------------------------------------------------------------------------
+# Harness Behavior
+# ---------------------------------------------------------------------------
+harness:
+  specification_language: "RFC-2119"   # Specifications use MUST, MUST NOT, SHOULD, etc.
+  quality_gates_enabled: true          # If true, agent MUST validate against quality-gates.json.
+  security_profile: "embedded"         # Security profile to apply. Options:
+                                       #   "embedded"      - Default. Memory safety, input validation.
+                                       #   "data-science"  - Data privacy, API key management.
+                                       #   "web"           - OAuth 2.0, SQL injection prevention.
+                                       #   "custom"        - User-defined in security-rules.md.
+
+# ---------------------------------------------------------------------------
+# Rules to Enforce
+# ---------------------------------------------------------------------------
+# The `enforce` flag determines behavior:
+#   true  = Any violation STOPS the process immediately.
+#   false = Violations are reported as warnings but do not block progress.
+#
+# The absence of a rule file here means it DOES NOT APPLY (not that it's optional).
+rules:
+  - path: "rules/security-rules.md"
+    enforce: true
+  - path: "rules/coding-standards.md"
+    enforce: true
+  - path: "rules/quality-gates.json"
+    enforce: true
+
+# ---------------------------------------------------------------------------
+# Workflow Configuration
+# ---------------------------------------------------------------------------
+workflows:
+  registry_path: "workflows/registry.yaml"
+
+# ---------------------------------------------------------------------------
+# Custom Quality Gates (Optional)
+# ---------------------------------------------------------------------------
+# Add project-specific quality gates here. These are APPENDED to the defaults
+# in quality-gates.json. Use the same schema.
+custom_quality_gates: []
+  # Example:
+  # - id: "QG-CUSTOM-01"
+  #   description: "Custom project-specific check"
+  #   language: "python"
+  #   command: "python scripts/validate.py"
+  #   mandatory: true
+
+# ---------------------------------------------------------------------------
+# Configuración de Exposición (solo aplica si project.type = "exposition")
+# ---------------------------------------------------------------------------
+# El agente lee esta sección cuando detecta project.type: exposition.
+#
+# REGLA CRÍTICA: Los campos title, subtitle, author, institution y date
+# NO deben inferirse de la fuente de contenido. El agente DEBE preguntar
+# estos datos EXPLÍCITAMENTE al usuario durante /specify.
+#
+# El autor del paper ≠ el expositor.
+# El título del paper ≠ el título de la exposición.
+# La institución de los autores ≠ la institución del expositor.
+# ---------------------------------------------------------------------------
+exposition:
+  # Fuente de contenido (usar SOLO UNA de las siguientes tres opciones):
+  paper_path: "s00034-025-03386-1.pdf"
+  topic: ""
+  book_reference: ""
+  repo_url: ""
+
+  # Datos del expositor — SIEMPRE preguntar explícitamente al usuario.
+  # Dejar vacíos aquí; el agente los llenará tras confirmar con el usuario.
+  title: "Optimal Design of Digital IIR Filters Using Robust Group Search Optimization"
+  subtitle: ""
+  author: "Mariano Prado Berman"
+  institution: "Instituto de investigacion en comunicacion optica (iico)"
+  date: "23 de mayo 2026"
+
+  # Configuración adicional:
+  estimated_duration: "Lo que dé el tema"
+  audience: "Dr. en física enfocado en procesado de señales y rigurosidad matemática (profesor de maestría en ingeniería eléctrica)"
+  language: "es"              # Idioma de los entregables.
+                              # Por defecto: "es" (español).
+                              # IMPORTANTE: Solo cambiar con confirmación EXPLÍCITA del usuario.
+                              # El idioma de la fuente NO determina el idioma de la presentación.
