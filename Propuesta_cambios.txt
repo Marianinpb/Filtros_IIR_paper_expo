@@ -1,0 +1,76 @@
+Propuesta de diapositivas adicionales para el guion de exposición "Optimal Design of Digital IIR Filters Using Robust Group Search Optimization"
+
+A continuación se indican las diapositivas que faltan, en qué posición del guion actual deberían insertarse, y un desarrollo detallado de su contenido. Se incluye, como solicitaste, una explicación profunda del método de Taguchi centrada en su funcionamiento exacto paso a paso.
+
+---
+
+### Diapositiva 3b (insertar después de la actual Diapositiva 3)
+**Título sugerido:** Algoritmo GSO – Metáfora de forrajeo y sus limitaciones
+
+**Propósito:** Explicar los conceptos de población, productor, scroungers y fitness que aparecen en el paper, sin asumir que la audiencia los conoce. Dejar clara la debilidad de un único productor.
+
+**Contenido propuesto:**
+- GSO (Group Search Optimization) se inspira en la búsqueda de alimento en grupos animales.
+- Población: conjunto de vectores de coeficientes del filtro (soluciones candidatas). Cada individuo tiene una posición en el espacio de búsqueda.
+- En cada iteración se asigna un rol a cada individuo:
+  * Productor: el individuo con el mejor valor de la función objetivo (mejor fitness). Realiza una búsqueda local explorando tres direcciones (adelante, izquierda, derecha) y se queda con la mejor.
+  * Scroungers (oportunistas): el resto del grupo se desplaza hacia el productor y copia su comportamiento, con cierta aleatoriedad.
+  * Rangers (exploradores): un pequeño porcentaje de individuos se dispersa aleatoriamente para mantener diversidad.
+- Fitness: valor de la función de costo f(x). Cuanto menor es f(x), más apto es el individuo.
+- Problema: si el productor queda atrapado en un mínimo local, todos los scroungers convergen allí y el algoritmo se estanca. R-GSO soluciona esto reemplazando al productor único por un productor óptimo generado mediante el método de Taguchi a partir de tres candidatos.
+
+---
+
+### Diapositiva 5b (insertar después de la actual Diapositiva 5, justo antes de la Diapositiva 6)
+**Título sugerido:** Método de Taguchi – Diseño Robusto y Arreglos Ortogonales
+
+**Propósito:** Dotar a la audiencia de las herramientas para entender cómo funciona exactamente la etapa de Taguchi dentro de R-GSO, más allá de su mención superficial.
+
+**Contenido propuesto (explicación paso a paso del funcionamiento):**
+1. **Objetivo en R-GSO:** Encontrar un nuevo productor combinando tres vectores candidatos (mejor fitness, segundo mejor, aleatorio) de modo que la solución resultante tenga un buen desempeño promedio Y baja variabilidad (robustez).
+2. **Factores y niveles:**
+   - Factores: cada una de las dimensiones del vector de diseño (coeficientes del filtro). Si hay D coeficientes, hay D factores.
+   - Niveles: para cada factor se consideran dos niveles, que son los valores de ese coeficiente en dos de los tres candidatos (por ejemplo, el valor del primer candidato como nivel 1, y el valor del segundo candidato como nivel 2). El tercer candidato se usa para evaluar la variabilidad.
+3. **Arreglo ortogonal (ej. L₈(2⁷)):**
+   - Es una matriz que permite probar solo 8 combinaciones de niveles en lugar de 2⁷ = 128.
+   - Cada fila del arreglo indica, para cada factor, si se toma el nivel 1 o el nivel 2.
+   - Propiedad de ortogonalidad: cada nivel de cada factor aparece el mismo número de veces y todas las combinaciones de pares de factores están balanceadas, lo que permite estimar el efecto de cada factor de manera independiente.
+4. **Experimentos según el arreglo:**
+   - Se construyen 8 vectores solución (uno por fila) y se evalúa cada uno en la función de costo f(x), pero añadiendo también el tercer candidato como "ruido" controlado para medir variabilidad.
+   - En términos prácticos, se generan sub‑poblaciones pequeñas alrededor de cada combinación con pequeñas perturbaciones del tercer candidato para calcular media y desviación estándar del costo.
+5. **Relación Señal‑Ruido (Signal‑to‑Noise Ratio, S/N):**
+   - Fórmula usada en el paper: E_{fj} = -10 log( (J_i(avg)² / J_Mavg²) + (J_i(std)² / J_Mstd²) )
+   - J_i(avg) y J_i(std) son la media y desviación estándar del costo para la combinación i-ésima.
+   - J_Mavg y J_Mstd son la media y desviación estándar globales (o máximas) usadas para normalizar.
+   - Esta métrica penaliza tanto un alto costo promedio como una alta variabilidad. Cuanto mayor (menos negativo) es E_{fj}, más robusta es la combinación.
+6. **Determinación del productor óptimo:**
+   - Se calcula E_{fj} para cada una de las 8 filas del arreglo.
+   - Para cada factor (dimensión), se suman los E_{fj} correspondientes a cada nivel y se elige el nivel que haya dado mayor suma. Ese nivel (valor del coeficiente tomado del candidato 1 o del candidato 2) será el que forme parte del vector productor final.
+   - Este nuevo vector hereda de los tres candidatos y posee la máxima robustez esperada.
+7. **Ventaja:** El método de Taguchi encuentra una combinación que es buena en promedio e insensible a pequeñas variaciones (estabilidad numérica), y lo hace con muy pocas evaluaciones gracias al arreglo ortogonal.
+
+---
+
+### Diapositiva 6b (puede fusionarse con la actual 6 o ser una diapositiva de apoyo visual)
+**Título sugerido:** Diagrama de flujo de R-GSO (opcional pero muy recomendable)
+
+**Propósito:** Ilustrar el ciclo completo del algoritmo para facilitar la comprensión de la integración Taguchi–GSO.
+
+**Contenido propuesto (para un diagrama o viñetas):**
+1. Inicializar población aleatoria (verificando estabilidad).
+2. Evaluar fitness de toda la población.
+3. Seleccionar tres productores: Xp1 (mejor), Xp2 (segundo), Xp3 (aleatorio).
+4. Aplicar método de Taguchi:
+   - Factores = D coeficientes, niveles = valores de Xp1 y Xp2.
+   - Construir arreglo L₈(2⁷) (o versión adaptada si D ≠ 7).
+   - Para cada fila, evaluar costo medio y std usando perturbaciones de Xp3.
+   - Calcular E_{fj} y elegir niveles óptimos → nuevo productor X_new.
+5. Actualizar productor de la población a X_new.
+6. Mover scroungers hacia X_new (copiar con variación).
+7. Mover rangers aleatoriamente.
+8. Repetir desde 2 hasta convergencia.
+
+---
+
+### Sugerencia sobre la Diapositiva 6 actual
+La actual diapositiva 6 menciona la relación señal‑ruido pero no explica cómo se obtienen los niveles ni cómo se usa el arreglo ortogonal. Podrías enriquecerla con los detalles de la diapositiva 5b propuesta, o bien dividir la información: la 5b explica el método de Taguchi genérico, y la 6 original se convierte en "Integración de Taguchi en el ciclo de GSO" con los pasos concretos de cómo se eligen los tres productores y se aplica el arreglo en cada iteración. El contenido adicional que te he detallado arriba te da el discurso para hacerlo con total precisión.

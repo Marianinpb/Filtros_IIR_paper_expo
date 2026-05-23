@@ -85,12 +85,25 @@
 \begin{frame}{El Problema del Diseño de Filtros IIR}
   \begin{itemize}
     \item Los métodos de transformación (e.g., bilineal) introducen distorsiones (warping) en altas frecuencias.
-    \item La \textbf{optimización numérica directa} de los coeficientes es preferida, pero propensa a óptimos locales.
-    \item Métodos bioinspirados como \textbf{GSO} (Group Search Optimization) dependen de un único ``productor'', limitando la exploración global.
+    \item La \textbf{optimización numérica directa} de los coeficientes es preferida, pero altamente restrictiva y propensa a óptimos locales.
   \end{itemize}
   \begin{alertblock}{Propuesta: R-GSO}
-    Integrar el \textbf{Método de Taguchi} en GSO para seleccionar un productor óptimo a partir de tres candidatos, garantizando robustez matemática y escape de óptimos locales.
+    Integrar el \textbf{Método de Taguchi} en Group Search Optimization (GSO) para seleccionar un productor óptimo a partir de tres candidatos, garantizando robustez matemática y un eficiente escape de óptimos locales.
   \end{alertblock}
+\end{frame}
+
+\begin{frame}{Algoritmo GSO: Metáfora de Forrajeo y Limitaciones}
+  El GSO se inspira en el comportamiento de forrajeo animal, asignando roles a las soluciones (vectores):
+  \begin{itemize}
+    \item \textbf{Productor:} Solución con el mejor \textit{fitness} (menor costo). Explora localmente a su alrededor.
+    \item \textbf{Scroungers} (Oportunistas): Copian el comportamiento del productor y se dirigen hacia él.
+    \item \textbf{Rangers} (Exploradores): Se dispersan de forma aleatoria para mantener la diversidad.
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Problema del GSO Clásico:}
+  \begin{itemize}
+    \item Al depender de un \textbf{único productor}, si este queda atrapado en un mínimo local, todos los scroungers convergen allí, estancando prematuramente la búsqueda.
+  \end{itemize}
 \end{frame}
 
 \section{Formulación Matemática}
@@ -121,16 +134,27 @@
 
 \section{Algoritmo R-GSO (Integración de Taguchi)}
 
-\begin{frame}{Selección Robusta del Productor}
-  En cada iteración, se seleccionan 3 productores: el mejor ($X_{p1}$), el segundo mejor ($X_{p2}$) y uno aleatorio ($X_{p3}$).
-  \vspace{0.5cm}
-  
-  Se aplican \textbf{arreglos ortogonales de Taguchi} para cruzar sistemáticamente estos perfiles. El desempeño se evalúa mediante la relación Señal/Ruido (Robust Response Value):
+\begin{frame}{Método de Taguchi: Diseño Robusto}
+  Busca obtener configuraciones paramétricas con buen desempeño medio y \textbf{baja variabilidad}.
+  \begin{itemize}
+    \item \textbf{Factores y Niveles:} Los coeficientes del filtro actúan como factores. Sus niveles son tomados de los valores de dos vectores candidatos.
+    \item \textbf{Arreglos Ortogonales (ej. $L_8$):} Reducen el espacio combinatorio, balanceando las pruebas para estimar el efecto aislado de cada factor.
+    \item \textbf{Métrica de Robustez (S/N):} Se evalúa la media y la desviación estándar penalizando la inestabilidad.
+  \end{itemize}
   \begin{equation}
-    E_{fj} = -10 \cdot \log \left( \frac{J_{i(avg)}^2}{J_{Mavg}^2} + \frac{J_{i(std)}^2}{J_{Mstd}^2} \right), \quad j=1, 2
+    E_{fj} = -10 \cdot \log \left( \frac{J_{i(avg)}^2}{J_{Mavg}^2} + \frac{J_{i(std)}^2}{J_{Mstd}^2} \right)
   \end{equation}
-  
-  Este criterio prioriza no solo un bajo costo promedio, sino una \textbf{baja desviación estándar}, asegurando estabilidad estructural.
+\end{frame}
+
+\begin{frame}{Integración de Taguchi en el Ciclo GSO}
+  El algoritmo R-GSO se ejecuta iterativamente:
+  \begin{enumerate}
+    \item \textbf{Evaluación:} Medir el costo de toda la población (solo vectores estables).
+    \item \textbf{Selección:} Elegir a los tres mejores referentes: el óptimo ($X_{p1}$), el sub-óptimo ($X_{p2}$) y un explorador aleatorio ($X_{p3}$).
+    \item \textbf{Cruce Robusto:} Aplicar Taguchi usando $X_{p1}$ y $X_{p2}$ como niveles. Utilizar $X_{p3}$ para inducir variabilidad durante la evaluación de $E_{fj}$.
+    \item \textbf{Actualización:} Elegir los niveles que maximizan $E_{fj}$ para conformar un \textbf{nuevo productor óptimo}.
+    \item \textbf{Desplazamiento:} Los Scroungers convergen hacia el nuevo productor, mitigando la retención en mínimos locales.
+  \end{enumerate}
 \end{frame}
 
 \section{Resultados y Conclusiones}
